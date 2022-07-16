@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use App\Models\User;
+use Illuminate\Support\Facades\Mail;
 
 class AuthController extends Controller
 {
@@ -43,18 +44,30 @@ class AuthController extends Controller
             'password' => 'required|string|min:6',
         ]);
 
-        $user = User::create([
-            'name' => $request->name,
-            'phone' => $request->phone,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-        ]);
+        try {
+            $user = User::create([
+                'name' => $request->name,
+                'phone' => $request->phone,
+                'email' => $request->email,
+                'password' => Hash::make($request->password),
+            ]);
 
-        $token = Auth::login($user);
-        return response()->json([
-            'user' => $user,
-            'token' => $token
-        ]);
+            $details = [
+                'name' => $user->name
+            ];
+
+            Mail::to($user->email)->send(new \App\Mail\WelcomeMail($details));
+
+            $token = Auth::login($user);
+            return response()->json([
+                'user' => $user,
+                'token' => $token
+            ]);
+
+        } catch (\Throwable $th) {
+            return response()->json(['error' => 'Erro ao criar usuário ' . $th->getMessage()], 500);
+        }
+
     }
 
     public function logout()

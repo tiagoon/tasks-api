@@ -15,13 +15,12 @@ class TaskController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'title' => 'required|string|min:3'
+            'title' => 'required|string|min:3|max:140'
         ]);
 
         try {
             $request->user()->tasks()->create([
-                'title' => $request->title,
-                'description' => $request->description,
+                'title' => $request->title
             ]);
             return response()->json(['message' => 'Tarefa criada com sucesso'], 201);
         } catch (\Throwable $th) {
@@ -32,17 +31,25 @@ class TaskController extends Controller
     public function update($id, Request $request)
     {
         $request->validate([
-            'title' => 'required|string',
-            'completed' => 'required|boolean',
+            'title' => 'string|min:3|max:140',
+            'completed' => 'boolean',
         ]);
+
+        $data = [
+            'updated_at' => now(),
+        ];
+
+        if (isset($request->title)) {
+            $data['title'] = $request->title;
+        }
+
+        if (isset($request->completed)) {
+            $data['completed'] = $request->completed;
+        }
 
         try {
             $task = $request->user()->tasks()->findOrFail($id);
-            $task->update([
-                'title' => $request->title,
-                'completed' => $request->completed,
-                'updated_at' => now(),
-            ]);
+            $task->update($data);
             return response()->json(['message' => 'Tarefa atualizada com sucesso'], 200);
         } catch (\Throwable $th) {
             return response()->json(['error' => 'Erro ao atualizar tarefa ' . $th->getMessage()], 500);
