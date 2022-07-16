@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Models\User;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Hash;
 
 class CreateUserCommand extends Command
 {
@@ -48,7 +49,7 @@ class CreateUserCommand extends Command
         $input = [
             'name' => $name,
             'email' => $email,
-            'password' => $password,
+            'password' => Hash::make($password),
             'phone' => $phone,
         ];
 
